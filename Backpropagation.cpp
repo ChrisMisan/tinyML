@@ -20,7 +20,7 @@ constexpr auto max_const(It b, It e)
     return *std::max_element(b, e);
 }
 
-constexpr int layers_sizes[] = {784, 5, 7, 10};
+constexpr int layers_sizes[] = {2, 5, 7, 1};
 constexpr int how_many_layers = size(layers_sizes);
 constexpr int max_layer_size = max_const(begin(layers_sizes), end(layers_sizes));
 
@@ -42,13 +42,13 @@ number_t relu_d(number_t x) {
 
 auto d_cross_entropy(const std::vector<number_t>& pred, const std::vector<number_t>& target) {
     std::vector<number_t> pred_copy(pred);
-    return std::transform(
+    std::transform(
         begin(pred_copy),
         end(pred_copy),
         begin(target),
         begin(pred_copy),
         [](auto a, auto b) {return -b / a; });
-
+    return pred_copy;
 }
 
 template <typename T>
@@ -93,14 +93,19 @@ struct layer_t
     }
 
     std::vector<number_t> calculate_hidden_layer_gradient(
-        const matrix_t& weights, const std::vector<number_t>& next_layer_gradients,
+        const matrix_t& weights,
+        const std::vector<number_t>& next_layer_gradients,
         const std::vector<number_t>& values)
     {
         std::vector<number_t> gradients(values.size(), {});
-        for(size_t i=0; i<values.size(); i++)
+        for (size_t j = 0; j < weights[0].size(); j ++)
         {
-            auto dow = sum_dow(weights[i], next_layer_gradients);
-            gradients[i] = dow * relu_d(values[i]);
+            number_t sum = 0.0;
+            for (size_t i = 0; i < weights.size(); i ++)
+            {
+                sum += weights[i][j] * next_layer_gradients[i];
+            }
+            gradients[j] = sum * relu_d(values[j]);
         }
         return gradients;
     }
@@ -115,11 +120,12 @@ struct layer_connection_t
     layer_connection_t(int neuron_num_current, int neuron_num_next) {
         for (int i = 0; i < neuron_num_next; i++) {
             W.push_back(std::vector<number_t>());
+            deltaW.push_back(std::vector<number_t>());
             B.push_back(0);
             for (int y = 0; y < neuron_num_current; y++) {
                 auto r = get_random_number((number_t)0, (number_t)1);
                 W[i].push_back(r);
-
+                deltaW[i].push_back(0);
             }
         }
     }
@@ -282,12 +288,10 @@ auto get_xor(bool x1, bool x2) {
         X[1] = 1.0;
 
 
-    std::vector<number_t> Y(2, 0.0);
+    std::vector<number_t> Y(1, 0.0);
 
     if (x1 ^ x2)
         Y[0] = 1.0;
-    else
-        Y[1] = 1.0;
 
     return std::make_pair(X, Y);
 }
@@ -370,13 +374,16 @@ int main() {
 
     //auto mnist_dataset=read_mnist();
     /*
-    mlp_t network = mlp_t(how_many_layers, layers_sizes);
     //network.initialize_weights();
     //network.initialize_biases();
     auto X = mnist_dataset.training_images;
     auto y = mnist_dataset.hot_encoded_training_labels;
     train(network, X, y);
     */
+    mlp_t network = mlp_t(how_many_layers, layers_sizes);
+    auto X = dataset.training_images;
+    auto Y = dataset.hot_encoded_training_labels;
+    train(network, X, Y);
 	return 0;
 }
 

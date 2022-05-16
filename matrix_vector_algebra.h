@@ -3,15 +3,6 @@
 #include <algorithm>
 #include <vector>
 
-std::vector<number_t> matrix_vector_multiply(const matrix_t& A, const vector_t& v) 
-{
-    std::vector<number_t> result;
-    std::transform(A.begin(), A.end(), std::back_inserter(result), [&](auto& row) {return vector_vector_dotproduct(row, v);});
-
-    return std::vector<number_t>(result.begin(), result.end());
-    
-}
-
 number_t vector_vector_dotproduct(const vector_t& v, const vector_t& u)
 {
     std::cout<<"Vector sizes: "<<v.size()<<" "<<u.size()<<std::endl;
@@ -23,6 +14,15 @@ number_t vector_vector_dotproduct(const vector_t& v, const vector_t& u)
         sum+=v[i]*u[i];
     }
     return sum;
+}
+
+std::vector<number_t> matrix_vector_multiply(const matrix_t& A, const vector_t& v)
+{
+    std::vector<number_t> result;
+    std::transform(A.begin(), A.end(), std::back_inserter(result), [&](auto& row) {return vector_vector_dotproduct(row, v);});
+
+    return std::vector<number_t>(result.begin(), result.end());
+
 }
 
 vector_t vector_vector_add(const vector_t& v, const vector_t& u)

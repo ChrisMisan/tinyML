@@ -42,13 +42,13 @@ number_t relu_d(number_t x) {
 
 auto d_cross_entropy(const std::vector<number_t>& pred, const std::vector<number_t>& target) {
     std::vector<number_t> pred_copy(pred);
-    return std::transform(
+    std::transform(
         begin(pred_copy),
         end(pred_copy),
         begin(target),
         begin(pred_copy),
         [](auto a, auto b) {return -b / a; });
-
+    return pred_copy;
 }
 
 template <typename T>
@@ -115,11 +115,12 @@ struct layer_connection_t
     layer_connection_t(int neuron_num_current, int neuron_num_next) {
         for (int i = 0; i < neuron_num_next; i++) {
             W.push_back(std::vector<number_t>());
+            deltaW.push_back(std::vector<number_t>());
             B.push_back(0);
             for (int y = 0; y < neuron_num_current; y++) {
                 auto r = get_random_number((number_t)0, (number_t)1);
                 W[i].push_back(r);
-
+                deltaW[i].push_back(0);
             }
         }
     }
@@ -168,8 +169,6 @@ struct mlp_t
 {
     std::vector<layer_t> layers = {how_many_layers, layer_t()};
     std::vector<layer_connection_t> weights_and_biases;
-   
-
 
     mlp_t(int number_of_layers, const int* layer_sizes) 
     {
@@ -230,8 +229,8 @@ struct mlp_t
         ++current_layer;
         ++current_layer_values;
         auto current_w = weights_and_biases.rbegin();
-        auto lrend = layers.rend();
-        for(; current_layer != lrend; ++current_layer, ++next_layer, ++current_w, ++current_layer_values)
+        auto lvrend = layers_values.rend();
+        for(; current_layer_values != lvrend; ++current_layer, ++next_layer, ++current_w, ++current_layer_values)
         {
             auto gradient = current_layer->calculate_hidden_layer_gradient(current_w->W, next_layer_gradient, *current_layer_values);
             current_w->update_weigths(*current_layer_values, next_layer_gradient);
@@ -285,7 +284,7 @@ auto accuracy(std::vector<Label> predictions, mnist::MNIST_dataset<number_t> mni
 
 auto train(mlp_t& network, const std::vector<std::vector<number_t>>& X, const std::vector<std::vector<number_t>>& Y, int batch_size=10, int epochs = 10)
 {
-    for(int epoch_number=0; epoch_number<epochs; epochs++){
+    for(int epoch_number=0; epoch_number<epochs; epoch_number++){
         
         for(int batch_element_iterator=0; batch_element_iterator<batch_size; batch_element_iterator++)
         {

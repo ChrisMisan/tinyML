@@ -229,6 +229,7 @@ struct mlp_t
         ++current_layer;
         ++current_layer_values;
         auto lvrend = layers_values.rend()-layers_frozen;
+        auto current_w = weights_and_biases.rbegin();
         for(; current_layer_values != lvrend; ++current_layer, ++next_layer, ++current_w, ++current_layer_values)
         {
             auto gradient = current_layer->calculate_hidden_layer_gradient(current_w->W, next_layer_gradient, *current_layer_values);
@@ -366,15 +367,13 @@ int main() {
 
     auto dataset = read_xor(100, 20);
 
-    //auto mnist_dataset=read_mnist();
-    /*
+    auto mnist_dataset=read_mnist();
+    
     mlp_t network = mlp_t(how_many_layers, layers_sizes);
-    //network.initialize_weights();
-    //network.initialize_biases();
     auto X = mnist_dataset.training_images;
     auto y = mnist_dataset.hot_encoded_training_labels;
     train(network, X, y);
-    */
+    
 	return 0;
 }
 

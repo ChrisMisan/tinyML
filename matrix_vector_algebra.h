@@ -14,7 +14,6 @@ std::vector<number_t> matrix_vector_multiply(const matrix_t& A, const vector_t& 
 
 number_t vector_vector_dotproduct(const vector_t& v, const vector_t& u)
 {
-    std::cout<<"Vector sizes: "<<v.size()<<" "<<u.size()<<std::endl;
     if(v.size()!=u.size()) throw std::runtime_error("Vector sizes do not match. Cannot calculate dot product.");
 
     number_t sum = 0;

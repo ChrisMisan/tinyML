@@ -208,7 +208,7 @@ struct mlp_t
         return activations;
     }
 
-    void back_propagate(const std::vector<number_t>& target_values, const std::vector<std::vector<number_t>>& layers_values)
+    void back_propagate(const std::vector<number_t>& target_values, const std::vector<std::vector<number_t>>& layers_values, int layers_frozen=0)
     {
         //auto error = cross_entropy(target_values, output_values);
         //auto avg_error = error / (layers.back().size() - 1);
@@ -228,8 +228,7 @@ struct mlp_t
         auto current_layer_values = next_layer_values;
         ++current_layer;
         ++current_layer_values;
-        auto current_w = weights_and_biases.rbegin();
-        auto lvrend = layers_values.rend();
+        auto lvrend = layers_values.rend()-layers_frozen;
         for(; current_layer_values != lvrend; ++current_layer, ++next_layer, ++current_w, ++current_layer_values)
         {
             auto gradient = current_layer->calculate_hidden_layer_gradient(current_w->W, next_layer_gradient, *current_layer_values);
@@ -256,6 +255,8 @@ struct Dataset {
         std::vector<std::vector<number_t>> hot_encoded_training_labels;
         std::vector<std::vector<number_t>> hot_encoded_test_labels;
 };
+
+
 auto read_mnist() {
     auto mnist_dataset = mnist::read_dataset<number_t, number_t>();
     Dataset dataset;
@@ -265,6 +266,68 @@ auto read_mnist() {
     dataset.hot_encoded_test_labels = hot_encode(mnist_dataset.test_labels);
     return dataset;
 }
+
+auto get_xor(bool x1, bool x2) {
+    std::vector<number_t> X(2, 0.0);
+    if (x1)
+        X[0] = 0.0;
+    else
+        X[0] = 1.0;
+
+    if (x2)
+        X[1] = 0.0;
+    else
+        X[1] = 1.0;
+
+
+    std::vector<number_t> Y(2, 0.0);
+
+    if (x1 ^ x2)
+        Y[0] = 1.0;
+    else
+        Y[1] = 1.0;
+
+    return std::make_pair(X, Y);
+}
+
+auto read_xor(unsigned int train_size=100, unsigned int test_size = 20) {
+    Dataset dataset;
+
+    std::vector<std::vector<number_t>> X;
+    std::vector<std::vector<number_t>> Y;
+    bool x1, x2;
+    for (int i = 0; i < train_size; i++)
+    {
+        x1 = (rand() % 2) == 0;
+        x2 = (rand() % 2) == 0;
+        auto xor_element = get_xor(x1, x2);
+        X.push_back(xor_element.first);
+        Y.push_back(xor_element.second);
+    }
+    dataset.training_images = X;
+    dataset.hot_encoded_training_labels = Y;
+    
+    X.clear();
+    Y.clear();
+
+    for (int i = 0; i < test_size; i++)
+    {
+        x1 = (rand() % 2) == 0;
+        x2 = (rand() % 2) == 0;
+        auto xor_element = get_xor(x1, x2);
+        X.push_back(xor_element.first);
+        Y.push_back(xor_element.second);
+    }
+    dataset.test_images = X;
+    dataset.hot_encoded_test_labels = Y;
+
+    return dataset;
+
+
+}
+
+
+
 
 
 
@@ -301,15 +364,17 @@ int main() {
 
     srand(time(NULL));
 
-    auto mnist_dataset=read_mnist();
+    auto dataset = read_xor(100, 20);
 
+    //auto mnist_dataset=read_mnist();
+    /*
     mlp_t network = mlp_t(how_many_layers, layers_sizes);
     //network.initialize_weights();
     //network.initialize_biases();
     auto X = mnist_dataset.training_images;
     auto y = mnist_dataset.hot_encoded_training_labels;
     train(network, X, y);
-
+    */
 	return 0;
 }
 
@@ -337,4 +402,5 @@ number_t* initialize_biases(number_t B[how_many_layers])
 
     return B;
 }
+
 

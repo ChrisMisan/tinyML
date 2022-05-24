@@ -209,7 +209,7 @@ struct mlp_t
         return activations;
     }
 
-    void back_propagate(const std::vector<number_t>& target_values, const std::vector<std::vector<number_t>>& layers_values)
+    void back_propagate(const std::vector<number_t>& target_values, const std::vector<std::vector<number_t>>& layers_values, int layers_frozen=0)
     {
         //auto error = cross_entropy(target_values, output_values);
         //auto avg_error = error / (layers.back().size() - 1);
@@ -230,7 +230,7 @@ struct mlp_t
         ++current_layer;
         ++current_layer_values;
         auto current_w = weights_and_biases.rbegin();
-        auto lrend = layers.rend();
+        auto lrend = layers.rend() - layers_frozen;
         for(; current_layer != lrend; ++current_layer, ++next_layer, ++current_w, ++current_layer_values)
         {
             auto gradient = current_layer->calculate_hidden_layer_gradient(current_w->W, next_layer_gradient, *current_layer_values);

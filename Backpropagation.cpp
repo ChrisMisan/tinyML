@@ -57,11 +57,16 @@ T get_random_number(T min, T max) {
     return (number_t)r * max + min;
 }
 
+void print_vec(std::vector<number_t> vec)
+{
+    for (auto number : vec)
+    {
+        std::cout << number << " ";
+    }
+}
+
 struct layer_t
 {
-   /* size_t neuron_count;
-    std::vector<activation_f_t> neuron_activation_functions;
-    std::vector<activation_f_t> neuron_activation_functions_derivatives;*/
     void run_activation_fs(std::vector<number_t>& in_out)
     {
         std::transform(
@@ -76,7 +81,6 @@ struct layer_t
 
         for(size_t i=0; i<pred_values.size(); i++)
         {
-            // TODO: generalize cost function //cost function derivative
             gradients[i] = delta[i] * relu_d(pred_values[i]);
         }
         return gradients;
@@ -118,15 +122,12 @@ struct layer_connection_t
             deltaW.push_back(std::vector<number_t>());
             B.push_back(0);
             for (int y = 0; y < neuron_num_current; y++) {
-                auto r = get_random_number((number_t)0, (number_t)1);
+                auto r = get_random_number((number_t)0, (number_t)1000);
                 W[i].push_back(r);
                 deltaW[i].push_back(0);
             }
         }
     }
-
-
-
 
 
     std::vector<number_t> forward_pass(const std::vector<number_t>& input)
@@ -136,6 +137,7 @@ struct layer_connection_t
 
     void update_weigths(const std::vector<number_t>& prev_layer_values, const std::vector<number_t>& next_layer_gradient)
     {
+        if (prev_layer_values.size()!=next_layer_gradient.size()) return;
         for(size_t i=0;i<W.size();i++)
         {
             for(size_t j=0;j<W[i].size();j++)
@@ -164,7 +166,6 @@ number_t cross_entropy(std::vector<number_t>& a, std::vector<number_t>& b)
 }
 
 
-
 struct mlp_t
 {
     std::vector<layer_t> layers = {how_many_layers, layer_t()};
@@ -187,17 +188,6 @@ struct mlp_t
         std::vector<std::vector<number_t>> activations;
         auto current_v = input;
 
-        // auto current_layer = std::begin(layers);
-        // ++current_layer;
-        // auto current_wb = std::begin(weights_and_biases);
-
-        // for(;current_layer != std::end(layers); current_layer++, current_wb++)
-        // {
-        //     current_v = current_wb->forward_pass(current_v);
-        //     current_layer->run_activation_fs(current_v);
-        //     activations.push_back(current_v);
-        // }
-
         for(int i=1; i<layers.size(); i++)
         {
             current_v = weights_and_biases[i-1].forward_pass(current_v);
@@ -210,19 +200,9 @@ struct mlp_t
 
     void back_propagate(const std::vector<number_t>& target_values, const std::vector<std::vector<number_t>>& layers_values, int layers_frozen=0)
     {
-        //auto error = cross_entropy(target_values, output_values);
-        //auto avg_error = error / (layers.back().size() - 1);
-
-        //RMSerror_ = sqrt(error);
-        // Implement a recent average measurement
-        // recentAverageError_ =
-        //    (recentAverageError_ * recentAverageSmoothingFactor_ + RMSerror_) /
-        //    (recentAverageSmoothingFactor_ + 1.0);
-
         auto next_layer = layers.rbegin();
         auto next_layer_values = layers_values.rbegin();
         auto next_layer_gradient = next_layer->calculate_output_layer_gradient(*next_layer_values, target_values);
-        // update weigths?
 
         auto current_layer = next_layer;
         auto current_layer_values = next_layer_values;
@@ -233,6 +213,10 @@ struct mlp_t
         for(; current_layer_values != lvrend; ++current_layer, ++next_layer, ++current_w, ++current_layer_values)
         {
             auto gradient = current_layer->calculate_hidden_layer_gradient(current_w->W, next_layer_gradient, *current_layer_values);
+            std::cout << "GRADIENT: ";
+            print_vec(gradient);
+            std::cout << std::endl;
+            
             current_w->update_weigths(*current_layer_values, next_layer_gradient);
             next_layer_gradient = gradient;
         }
@@ -323,13 +307,7 @@ auto read_xor(unsigned int train_size=100, unsigned int test_size = 20) {
     dataset.hot_encoded_test_labels = Y;
 
     return dataset;
-
-
 }
-
-
-
-
 
 
 auto accuracy(std::vector<Label> predictions, mnist::MNIST_dataset<number_t> mnist_dataset){
@@ -343,8 +321,8 @@ auto accuracy(std::vector<Label> predictions, mnist::MNIST_dataset<number_t> mni
     }
 
     return (good_predictions/test_sample_size*1.0);
-    
 }
+
 
 auto train(mlp_t& network, const std::vector<std::vector<number_t>>& X, const std::vector<std::vector<number_t>>& Y, int batch_size=10, int epochs = 10)
 {
@@ -354,7 +332,11 @@ auto train(mlp_t& network, const std::vector<std::vector<number_t>>& X, const st
         {
             int i = rand() % X.size();
             auto activations = network.forward_pass(X[i]);
+            std::cout << "EPOCH NUMBER: " << epoch_number+1 << " BATCH ITERATOR: "<< batch_element_iterator+1 << " ACTIVATIONS: ";
+            print_vec(activations.back());
+            std::cout << std::endl;
             network.back_propagate(Y[i], activations);
+            std::cout << std::endl << "=======================================" << std::endl << std::endl;
         }
 
     }
@@ -365,8 +347,6 @@ int main() {
 
     srand(time(NULL));
 
-    auto dataset = read_xor(100, 20);
-
     auto mnist_dataset=read_mnist();
     
     mlp_t network = mlp_t(how_many_layers, layers_sizes);
@@ -376,30 +356,3 @@ int main() {
     
 	return 0;
 }
-
-
-
-
-number_t** initialize_weights(number_t* W[how_many_layers])
-{
-    for(int i=0; i<how_many_layers; i++)
-    {
-        for(int j=0; j<layers_sizes[i]; i++)
-        {
-            W[i][j] = get_random_number(0, 1);
-        }
-    }
-    return W;
-}
-
-number_t* initialize_biases(number_t B[how_many_layers])
-{
-    for(int i=0; i<how_many_layers; i++)
-    {
-        B[i] = get_random_number(0, 1);
-    }
-
-    return B;
-}
-
-

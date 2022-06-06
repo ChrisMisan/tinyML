@@ -15,6 +15,7 @@ using namespace std;
 const number_t epsilon = 0.01f;
 const number_t eta = 0.01f;
 const number_t alpha = 0.01f;
+const float LEARNING_CONSTANT = 0.001f;
 
 template<typename It>
 constexpr auto max_const(It b, It e)
@@ -121,23 +122,28 @@ struct layer_connection_t
     matrix_t deltaW;
     std::vector<number_t> B;
 
-    layer_connection_t(int neuron_num_current, int neuron_num_next) {
+    layer_connection_t(int neuron_num_next, int neuron_num_current) {
         for (int i = 0; i < neuron_num_next; i++) {
             W.push_back(std::vector<number_t>());
             deltaW.push_back(std::vector<number_t>());
-            B.push_back(0);
+            
             for (int y = 0; y < neuron_num_current; y++) {
                 auto r = get_random_number((number_t)0, (number_t)1);
                 W[i].push_back(r);
                 deltaW[i].push_back(0);
             }
         }
+
+        for (int y = 0; y < neuron_num_current; y++)
+        {
+            B.push_back(0);
+        }
     }
 
 
-    std::vector<number_t> forward_pass(const std::vector<number_t>& input)
+    std::vector<number_t> forward_pass(const vector_t& input)
     {
-        return vector_vector_add(matrix_vector_multiply(W, input), B);
+        return vector_vector_add(matrix_multiply(input, W)[0], B);
     }
 
     void update_weigths(const std::vector<number_t>& prev_layer_values, const std::vector<number_t>& next_layer_gradient)
@@ -203,15 +209,41 @@ struct mlp_t
             if(i<layers.size()-1)layers[i].activation_f.derivative(current_v, layers[i].d_activations);
         }
     }
-    void back_propagate(){
-
+    void back_propagate(const vector_t& input){
+        vector_t visible;
         for(int i=this->layers.size()-1; i>=0; i--)
         {
+            auto layer = layers[i];
             if(i>0)
             {
                 auto prev_layer = this->layers[i-1];
-                auto visible = prev_layer.activations;
+                auto weights = this->weights_and_biases[i - 1].W;
+                visible = prev_layer.activations;
 
+                prev_layer.deltas = matrix_multiply(layer.deltas, transpose(weights))[0];
+
+                for (int j = 0; j < prev_layer.deltas.size(); j++)
+                {
+                    prev_layer.deltas[i] *= prev_layer.d_activations[j];
+                }
+               
+            }
+            else
+            {
+                visible = input;
+            }
+
+            auto visible_transposed = transpose(visible);
+            auto gradient = matrix_multiply(visible_transposed, layer.deltas);
+
+            if (i > 0) {
+                for (int j = 0; j < gradient.size(); j++)
+                {
+                    for (int k = 0; k < gradient[0].size(); k++)
+                    {
+                        weights_and_biases[i - 1].W[j][k] -= LEARNING_CONSTANT * gradient[j][k];
+                    }
+                }
             }
 
         }
@@ -357,7 +389,7 @@ auto train(mlp_t& network,
 
             network.layers.back().deltas = d_cross_entropy(network.layers.back().activations, Y[i]);
 
-            network.back_propagate();
+            network.back_propagate(X[i]);
         }
 
     }

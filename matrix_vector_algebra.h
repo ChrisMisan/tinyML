@@ -87,6 +87,20 @@ vector_t vector_vector_add(const vector_t& v, const vector_t& u)
     return result;
 }
 
+vector_t vector_vector_subtract(const vector_t& v, const vector_t& u)
+{
+    if (v.size() != u.size()) throw std::runtime_error("Vector sizes do not match. Cannot subtract vectors.");
+    vector_t result;
+    for (unsigned int i = 0; i < v.size(); i++)
+    {
+        result.push_back(v[i] - u[i]);
+    }
+    return result;
+}
+
+
+
+
 bool are_equal(const vector_t& a, const vector_t& b)
 {
     if (a.size() != b.size()) return false;

@@ -15,7 +15,7 @@ using namespace std;
 const number_t epsilon = 0.01f;
 const number_t eta = 0.01f;
 const number_t alpha = 0.01f;
-const float LEARNING_CONSTANT = 0.001f;
+const float LEARNING_CONSTANT = 0.1f;
 
 template<typename It>
 constexpr auto max_const(It b, It e)
@@ -23,7 +23,7 @@ constexpr auto max_const(It b, It e)
     return *std::max_element(b, e);
 }
 
-constexpr int layers_sizes[] = {784, 50, 17, 10};
+constexpr int layers_sizes[] = {784, 256, 10};
 constexpr int how_many_layers = size(layers_sizes);
 constexpr int max_layer_size = max_const(begin(layers_sizes), end(layers_sizes));
 
@@ -213,18 +213,16 @@ struct mlp_t
         vector_t visible;
         for(int i=this->layers.size()-1; i>=0; i--)
         {
-            auto layer = layers[i];
+            auto& layer = layers[i];
             if(i>0)
             {
                 auto prev_layer = this->layers[i-1];
                 auto weights = this->weights_and_biases[i - 1].W;
                 visible = prev_layer.activations;
-
                 prev_layer.deltas = matrix_multiply(layer.deltas, transpose(weights))[0];
-
                 for (int j = 0; j < prev_layer.deltas.size(); j++)
                 {
-                    prev_layer.deltas[i] *= prev_layer.d_activations[j];
+                    prev_layer.deltas[j] *= prev_layer.d_activations[j];
                 }
                
             }
@@ -233,13 +231,12 @@ struct mlp_t
                 visible = input;
             }
 
-            auto visible_transposed = transpose(visible);
-            auto gradient = matrix_multiply(visible_transposed, layer.deltas);
+            auto gradient = matrix_multiply(transpose(visible), layer.deltas);
 
             if (i > 0) {
                 for (int j = 0; j < gradient.size(); j++)
                 {
-                    for (int k = 0; k < gradient[0].size(); k++)
+                    for (int k = 0; k < gradient[j].size(); k++)
                     {
                         weights_and_biases[i - 1].W[j][k] -= LEARNING_CONSTANT * gradient[j][k];
                     }
@@ -250,28 +247,6 @@ struct mlp_t
 
     }
 
-    void back_propagate(const std::vector<number_t>& target_values, const std::vector<std::vector<number_t>>& layers_values, int layers_frozen=0){
-        auto next_layer = layers.rbegin();
-        auto next_layer_values = layers_values.rbegin();
-        auto next_layer_gradient = next_layer->calculate_output_layer_gradient(*next_layer_values, target_values);
-
-        auto current_layer = next_layer;
-        auto current_layer_values = next_layer_values;
-        ++current_layer;
-        ++current_layer_values;
-        auto lvrend = layers_values.rend()-layers_frozen;
-        auto current_w = weights_and_biases.rbegin();
-        for(; current_layer_values != lvrend; ++current_layer, ++next_layer, ++current_w, ++current_layer_values)
-        {
-            auto gradient = current_layer->calculate_hidden_layer_gradient(current_w->W, next_layer_gradient, *current_layer_values);
-            std::cout << "GRADIENT: ";
-            print_vec(gradient);
-            std::cout << std::endl;
-            
-            current_w->update_weigths(*current_layer_values, next_layer_gradient);
-            next_layer_gradient = gradient;
-        }
-    }
 };
 
 std::vector<std::vector<number_t>> hot_encode(const std::vector<number_t>& labels, int vector_size=10)
@@ -386,7 +361,9 @@ auto train(mlp_t& network,
         {
             int i = rand() % X.size();
             network.forward_pass(X[i]);
-            for (int j = 0; j < network.layers[3].activations.size(); j++)
+            auto y = network.layers.back().activations;
+            //network.layers.back().d_activations = d_cross_entropy(y, Y[i]);
+            for (int j = 0; j < network.layers.back().activations.size(); j++)
             {
              //   std::cout << network.layers[3].activations[j]<<" ";
             }
@@ -398,9 +375,9 @@ auto train(mlp_t& network,
             }
             //std::cout << std::endl;
             
-            auto y = network.layers[3].activations;
+            
             if (are_equal(y, Y[i])) how_many_correct++;
-            network.layers.back().deltas = d_cross_entropy(network.layers.back().activations, Y[i]);
+            network.layers.back().deltas = vector_vector_subtract(y, Y[i]);
 
             network.back_propagate(X[i]);
         }
@@ -418,6 +395,10 @@ int main() {
     
     mlp_t network = mlp_t(how_many_layers, layers_sizes);
     auto X = mnist_dataset.training_images;
+    for(int i=0; i<X.size(); i++)
+    {
+        for (int j = 0; j < X[i].size(); j++) X[i][j] /= 255.0;
+    }
     auto Xt = mnist_dataset.test_images;
     auto y = mnist_dataset.hot_encoded_training_labels;
     auto yt = mnist_dataset.hot_encoded_training_labels;

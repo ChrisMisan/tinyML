@@ -378,22 +378,37 @@ auto accuracy(std::vector<Label> predictions, mnist::MNIST_dataset<number_t> mni
 auto train(mlp_t& network,
            const std::vector<std::vector<number_t>>& X,
            const std::vector<std::vector<number_t>>& Y,
-           int batch_size=10, int epochs = 10)
+           int batch_size=100, int epochs = 100)
 {
     for(int epoch_number=0; epoch_number<epochs; epoch_number++){
-        
+        int how_many_correct = 0;
         for(int batch_element_iterator=0; batch_element_iterator<batch_size; batch_element_iterator++)
         {
             int i = rand() % X.size();
             network.forward_pass(X[i]);
-
+            for (int j = 0; j < network.layers[3].activations.size(); j++)
+            {
+             //   std::cout << network.layers[3].activations[j]<<" ";
+            }
+            //std::cout << "   Y: ";
+            
+            for (int j = 0; j <Y[i].size(); j++)
+            {
+                // std::cout << Y[i][j] << " ";
+            }
+            //std::cout << std::endl;
+            
+            auto y = network.layers[3].activations;
+            if (are_equal(y, Y[i])) how_many_correct++;
             network.layers.back().deltas = d_cross_entropy(network.layers.back().activations, Y[i]);
 
             network.back_propagate(X[i]);
         }
-
+        std::cout << "EPOCH NUMBER: " << epoch_number << " ACCURACY: "<< how_many_correct*1.0/batch_size <<std::endl;
     }
 }
+
+
 
 int main() {
 

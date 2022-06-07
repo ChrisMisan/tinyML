@@ -87,4 +87,12 @@ vector_t vector_vector_add(const vector_t& v, const vector_t& u)
     return result;
 }
 
-
+bool are_equal(const vector_t& a, const vector_t& b)
+{
+    if (a.size() != b.size()) return false;
+    for (int i = 0; i < a.size(); i++)
+    {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}

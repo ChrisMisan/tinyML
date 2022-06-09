@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include <algorithm>
 #include <numeric>
+#include <iostream>
 
 namespace mlp
 {
@@ -171,5 +172,16 @@ namespace mlp
         vector_t out(r.size());
         mat_vec_mul_o(l, r, out);
         return out;
+    }
+
+    void print_vec(const vector_t& vec)
+    {
+        for (auto& el : vec) std::cout << el << " ";
+        std::cout << std::endl;
+    }
+
+    void print_mat(const matrix_t& mat)
+    {
+        for (auto& vec : mat) print_vec(vec);
     }
 }

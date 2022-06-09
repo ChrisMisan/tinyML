@@ -1,6 +1,24 @@
 #pragma once
 
 #include <vector>
+#include <algorithm>
+#include <random>
+
+template<typename It>
+constexpr auto max_const(It b, It e)
+{
+    return *std::max_element(b, e);
+}
+
+template <typename T>
+T get_random_number(T min, T max) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(min, max);
+    return dis(gen);
+}
+
+
 
 namespace mlp
 {
@@ -50,4 +68,8 @@ namespace mlp
 
     void mat_vec_mul_o(const matrix_t& l, const vector_t& r, vector_t& out);
     vector_t mat_vec_mul(const matrix_t& l, const vector_t& r);
+
+    void print_vec(const vector_t& vec);
+    void print_mat(const matrix_t& mat);
+
 }

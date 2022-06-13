@@ -1,7 +1,9 @@
-#include "common.hpp"
+#include <common.hpp>
 #include <algorithm>
 #include <numeric>
 #include <iostream>
+
+using namespace std;
 
 namespace mlp
 {
@@ -63,13 +65,13 @@ namespace mlp
 
     vector_t dot_add(const vector_t& a, const vector_t& b)
     {
-        vector_t out(a.size());
+        vector_t out(a.size(), 0);
         dot_add_o(a, b, out);
         return out;
     }
     vector_t dot_sub(const vector_t& a, const vector_t& b)
     {
-        vector_t out(a.size());
+        vector_t out(a.size(), 0);
         dot_sub_o(a, b, out);
         return out;
     }
@@ -160,6 +162,24 @@ namespace mlp
         return out;
     }
 
+    void mul_to_mat_o(const vector_t& a, const vector_t& b, matrix_t& out)
+    {
+        for(size_t i=0;i<a.size();i++)
+        {
+            for(size_t j=0;j<b.size();j++)
+            {
+                out[i][j] = a[i]*b[j];
+            }
+        }
+    }
+
+    matrix_t mul_to_mat(const vector_t& a, const vector_t& b)
+    {
+        matrix_t out(a.size(), vector_t(b.size()));
+        mul_to_mat_o(a, b, out);
+        return out;
+    }
+
     void mat_vec_mul_o(const matrix_t& l, const vector_t& r, vector_t& out)
     {
         for(size_t i=0;i<height(l);i++)
@@ -167,10 +187,48 @@ namespace mlp
             out[i] = dot_product(l[i], r);
         }
     }
+
     vector_t mat_vec_mul(const matrix_t& l, const vector_t& r)
     {
-        vector_t out(r.size());
+        vector_t out(height(l));
         mat_vec_mul_o(l, r, out);
+        return out;
+    }
+
+    void vec_mat_mul_o(const vector_t& l, const matrix_t& r, vector_t& out)
+    {
+        for(size_t i=0;i<width(r);i++)
+        {
+            number_t sum = 0;
+            for(size_t j=0; j<height(r); j++)
+            {
+                sum += l[j]*r[j][i];
+            }
+            out[i] = sum;
+        }
+    }
+
+    vector_t vec_mat_mul(const vector_t& l, const matrix_t& r) {
+        vector_t out(width(r));
+        vec_mat_mul_o(l, r, out);
+        return out;
+    }
+
+    void mat_mul_o(const matrix_t& l, const number_t& r, matrix_t& out)
+    {
+        for(size_t i=0;i< height(l);i++)
+        {
+            for (size_t j = 0; j < width(l); j++)
+            {
+                out[i][j] = l[i][j]*r;
+            }
+        }
+    }
+
+    matrix_t mat_mul(const matrix_t& l, const number_t& r)
+    {
+        matrix_t out(height(l), vector_t(width(l)));
+        mat_mul_o(l, r, out);
         return out;
     }
 
@@ -183,5 +241,28 @@ namespace mlp
     void print_mat(const matrix_t& mat)
     {
         for (auto& vec : mat) print_vec(vec);
+    }
+
+    void transpose_o(const matrix_t& mat, matrix_t& out)
+    {
+        for (int i = 0; i < height(mat); i++)
+        {
+            for (int j = 0; j < width(mat); j++)
+            {
+                out[j][i] = mat[i][j];
+            }
+        }
+    }
+
+    matrix_t transpose(const matrix_t& mat)
+    {
+        matrix_t result = matrix_t(mat[0].size(), vector_t(mat.size(), 0));
+        transpose_o(mat, result);
+        return result;
+    }
+
+    bool are_equal(const vector_t& a, const vector_t& b)
+    {
+        return std::equal(begin(a), end(a), begin(b), end(b));
     }
 }

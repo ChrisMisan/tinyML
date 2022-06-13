@@ -3,12 +3,12 @@ cmake_minimum_required(VERSION 3.20)
 project(tinyML)
 
 add_executable(tinyML
-        Backpropagation.cpp
-		matrix_vector_algebra.h
+		main.cpp
 		mnist_reader_common.h
 		mnist_reader_less.h
-		types.h
 		common.hpp
+		dataset.hpp
+		dataset.cpp
 		layer.hpp
 		activation.hpp
 		operations.cpp

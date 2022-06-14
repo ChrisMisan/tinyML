@@ -1,15 +1,18 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <stdlib.h>
 #include <time.h>
-
-
 #include <numeric>
-
 #include "matrix_vector_algebra.h"
 #include "types.h"
+#include "dataset.h"
+#include "operations.h"
 #include "activation.hpp"
 #include "dataset.hpp"
+#include <cbor.h>
+#include <stdio.h>
+
 
 using namespace std;
 
@@ -41,13 +44,18 @@ struct layer_t
 };
 
 struct layer_connection_t
-{
+{ 
     matrix_t W;
     matrix_t deltaW;
     std::vector<number_t> B;
 
     layer_connection_t(int neuron_num_next, int neuron_num_current) {
+
+        int W_size = neuron_num_next*(neuron_num_current+1);
+
+
         for (int i = 0; i < neuron_num_next; i++) {
+
             W.push_back(std::vector<number_t>());
             deltaW.push_back(std::vector<number_t>());
             
@@ -90,6 +98,7 @@ struct mlp_t
 {
     std::vector<layer_t> layers;
     std::vector<layer_connection_t> weights_and_biases;
+
 
     mlp_t(int number_of_layers, const int* layer_sizes) 
     {
@@ -154,6 +163,66 @@ struct mlp_t
 
 };
 
+#define BUFFER_SIZE 8
+unsigned char buffer[BUFFER_SIZE];
+FILE* out;
+
+void flush(size_t bytes) {
+  if (bytes == 0) exit(1);  // All items should be successfully encoded
+  if (fwrite(buffer, sizeof(unsigned char), bytes, out) != bytes) exit(1);
+  if (fflush(out)) exit(1);
+}
+
+auto read_network(){
+    out = std::fopen("W.cb", "r+");
+    long n = 10;
+
+    // Start an indefinite-length array
+    flush(cbor_encode_indef_array_start(buffer, BUFFER_SIZE));
+    // Write the array items one by one
+    for (size_t i = 0; i < n; i++) {
+        flush(cbor_encode_uint32(i, buffer, BUFFER_SIZE));
+    }
+    // Close the array
+    flush(cbor_encode_break(buffer, BUFFER_SIZE));
+
+    fclose(out);
+}
+
+auto save_network(mlp_t& network){
+    cbor_item_t * root = cbor_new_definite_map(1);
+
+    std::FILE* W_file = std::fopen("W.cb", "w+");
+
+    std::vector<layer_t> layers = network.layers;
+    std::vector<layer_connection_t> weights_and_biases = network.weights_and_biases;
+
+    int number_of_connections = weights_and_biases.size();
+
+    for (int i = 0; i < number_of_connections; i++){
+        layer_connection_t connection = weights_and_biases[i];
+
+        matrix_t W = connection.W;
+        cbor_item_t * W_cbor = cbor_new_definite_array(size(W));
+
+        //SERIALIZE W
+        for (int i = 0; i<size(W); i++){
+            vector_t vector = W[i];
+            cbor_item_t * vector_item = cbor_new_definite_array(size(vector));
+
+            for (int j = 0; j<size(W); j++){
+                cbor_array_push(vector_item, cbor_build_uint8(vector[j]));
+            }
+            cbor_array_push(W_cbor, vector_item);
+        }
+
+        unsigned char * W_buffer;
+        size_t W_buffer_size, W_length = cbor_serialize_alloc(root, &W_buffer, &W_buffer_size);
+        fwrite(W_buffer, 1, W_length, W_file);
+        fclose(W_file);
+    }
+}
+
 
 auto train(mlp_t& network,
            const std::vector<std::vector<number_t>>& X,
@@ -174,9 +243,9 @@ auto train(mlp_t& network,
             network.back_propagate(X[i]);
         }
         std::cout << "EPOCH NUMBER: " << epoch_number << " ACCURACY: "<< how_many_correct*1.0/batch_size <<std::endl;
+
     }
 }
-
 
 
 int main() {
@@ -194,7 +263,11 @@ int main() {
     auto Xt = mnist_dataset.test_images;
     auto y = mnist_dataset.hot_encoded_training_labels;
     auto yt = mnist_dataset.hot_encoded_training_labels;
+
     train(network, X, y);
+    save_network(network);
+    read_network();
+
     
 	return 0;
 }

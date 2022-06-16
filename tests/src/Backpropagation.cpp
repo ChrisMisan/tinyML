@@ -8,7 +8,7 @@
 #include "types.h"
 #include "dataset.h"
 #include "operations.h"
-#include "activation.hpp"
+#include "activation_function.hpp"
 #include "dataset.hpp"
 #include <cbor.h>
 #include <stdio.h>

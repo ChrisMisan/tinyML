@@ -1,63 +1,14 @@
 #pragma once
 
-#include <vector>
-#include <algorithm>
-#include <random>
+#include <common.hpp>
 
-namespace mlp
+namespace tinyML
 {
-    template<typename T>
-    class counting_allocator
-    {
-    public:
-        using value_type = typename std::allocator<T>::value_type ;
-        using size_type = typename std::allocator<T>::size_type;
-        using difference_type = typename std::allocator<T>::difference_type;
-        using propagate_on_container_move_assignment = typename std::allocator<T>::propagate_on_container_move_assignment;
-    private:
-        std::allocator<T> _alloc = {};
-    public:
-        static size_t allocations;
-        static size_t deallocations;
-    public:
-        [[nodiscard]] constexpr T* allocate(size_type n)
-        {
-            auto res = _alloc.allocate(n);
-            allocations += n;
-            return res;
-        }
-        constexpr void deallocate(T* p, size_type n)
-        {
-            _alloc.deallocate(p, n);
-            deallocations += n;
-        }
-    };
-
-    template<typename T>
-    size_t counting_allocator<T>::allocations = 0;
-    template<typename T>
-    size_t counting_allocator<T>::deallocations = 0;
-
-    using number_t = float;
-    using alloc = std::allocator<number_t>;
-    using vector_t = std::vector<number_t, alloc>;
-    using matrix_t = std::vector<std::vector<number_t, alloc>>;
-
-    struct activation_f_t;
-    struct layer_t;
-    struct layer_connection_t;
-
-    template<typename It>
-    constexpr auto max_const(It b, It e)
-    {
-        return *std::max_element(b, e);
-    }
-
     template <typename T>
     T get_random_number(T min, T max) {
         static std::random_device rd;
         static std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis(min, max);
+        std::uniform_real_distribution<T> dis(min, max);
         return dis(gen);
     }
 
@@ -105,10 +56,6 @@ namespace mlp
     void vec_mat_mul_o(const vector_t& r, const matrix_t& l, vector_t& out);
     vector_t mat_vec_mul(const matrix_t& l, const vector_t& r);
     vector_t vec_mat_mul(const vector_t& r, const matrix_t& l);
-
-
-    void print_vec(const vector_t& vec);
-    void print_mat(const matrix_t& mat);
 
     void transpose_o(const matrix_t& A, matrix_t& out);
     matrix_t transpose(const matrix_t& A);

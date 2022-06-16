@@ -1,11 +1,9 @@
-#include <common.hpp>
+#include <linalg.hpp>
+
 #include <algorithm>
 #include <numeric>
-#include <iostream>
 
-using namespace std;
-
-namespace mlp
+namespace tinyML
 {
     size_t length(const vector_t& v)
     {
@@ -230,17 +228,6 @@ namespace mlp
         matrix_t out(height(l), vector_t(width(l)));
         mat_mul_o(l, r, out);
         return out;
-    }
-
-    void print_vec(const vector_t& vec)
-    {
-        for (auto& el : vec) std::cout << el << " ";
-        std::cout << std::endl;
-    }
-
-    void print_mat(const matrix_t& mat)
-    {
-        for (auto& vec : mat) print_vec(vec);
     }
 
     void transpose_o(const matrix_t& mat, matrix_t& out)

@@ -1,10 +1,10 @@
 #include <dataset.hpp>
+#include <mnist/mnist_reader_less.h>
+#include <iostream>
 
-using namespace std;
-
-namespace mlp
+namespace tinyML
 {
-    matrix_t Dataset::hot_encode(const vector_t& labels, size_t vector_size)
+    matrix_t dataset_t::hot_encode(const vector_t& labels, size_t vector_size)
     {
         matrix_t hot_encoded(labels.size(), vector_t(vector_size, 0));
         for (unsigned int i = 0; i < labels.size(); i++)
@@ -35,13 +35,13 @@ namespace mlp
         return mat;
     }
 
-    Dataset load_mnist() {
+    dataset_t load_mnist() {
         auto mnist_dataset = mnist::read_dataset<number_t, number_t>();
-        Dataset dataset;
+        dataset_t dataset;
         dataset.training_images = to_matrix_t(mnist_dataset.training_images);
         dataset.test_images = to_matrix_t(mnist_dataset.test_images);
-        dataset.hot_encoded_training_labels = Dataset::hot_encode(to_vector_t(mnist_dataset.training_labels));
-        dataset.hot_encoded_test_labels = Dataset::hot_encode(to_vector_t(mnist_dataset.test_labels));
+        dataset.hot_encoded_training_labels = dataset_t::hot_encode(to_vector_t(mnist_dataset.training_labels));
+        dataset.hot_encoded_test_labels = dataset_t::hot_encode(to_vector_t(mnist_dataset.test_labels));
         return dataset;
     }
 
@@ -67,15 +67,15 @@ namespace mlp
 
         return std::make_pair(X, Y);
     }
-/*
-    Dataset load_xor(unsigned int train_size = 100, unsigned int test_size = 20) {
-        Dataset dataset;
+
+    dataset_t load_xor(unsigned int train_size = 100, unsigned int test_size = 20)
+    {
+        dataset_t dataset;
 
         matrix_t X;
         matrix_t Y;
         bool x1, x2;
-        for (int i = 0; i < train_size; i++)
-        {
+        for (size_t i = 0; i < train_size; i++) {
             x1 = (rand() % 2) == 0;
             x2 = (rand() % 2) == 0;
             auto xor_element = get_xor(x1, x2);
@@ -88,8 +88,7 @@ namespace mlp
         X.clear();
         Y.clear();
 
-        for (int i = 0; i < test_size; i++)
-        {
+        for (size_t i = 0; i < test_size; i++) {
             x1 = (rand() % 2) == 0;
             x2 = (rand() % 2) == 0;
             auto xor_element = get_xor(x1, x2);
@@ -100,5 +99,5 @@ namespace mlp
         dataset.hot_encoded_test_labels = Y;
 
         return dataset;
-    }*/
+    }
 }

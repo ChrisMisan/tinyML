@@ -5,6 +5,8 @@
 
 namespace tinyML
 {
+
+
     class layer_t
     {
         friend class multi_layer_perceptron_t;

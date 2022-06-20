@@ -1,9 +1,9 @@
 # TinyML
 TinyML is a blazingly fast, portable `ARM` compatible library for distributed training of ANNs on IoT devices.
 
-It's a tiny, pure **C++** implementation of a Multi-Layer Perceptron, built on a robust linear algebra operations toolkit.
+It's a tiny, pure **C++** implementation of a Multi-Layer Perceptron, built on a simple linear algebra operations toolkit.
 
-This library comes with an example training on the MNIST dataset, which is included in this repository under `mnist/` folder.
+This library comes with an example training on the MNIST dataset, which is included in this repository under `tests/mnist/` folder.
 
 ## Usage
 In order to run the library locally you need to build the project:
@@ -11,37 +11,9 @@ In order to run the library locally you need to build the project:
 2. `cmake .`
 3. `cmake --build .` or `make .`
 
-...then run the executable: `./tinyML`
-
 ## Example
 As an example we train an MLP network to recognize digits from the MNIST dataset:
-```c++
-int main() {
-
-    {
-        srand(time(NULL));
-
-        auto mnist_dataset=mlp::load_mnist();
-
-        mlp_t network = mlp_t(how_many_layers, layers_sizes);
-        auto X = mnist_dataset.training_images;
-        for(int i=0; i<X.size(); i++)
-        {
-            for (int j = 0; j < X[i].size(); j++) X[i][j] /= 255.0;
-        }
-        auto Xt = mnist_dataset.test_images;
-        auto y = mnist_dataset.hot_encoded_training_labels;
-        auto yt = mnist_dataset.hot_encoded_training_labels;
-        train(network, X, y);
-    }
-
-
-    cout << counting_allocator<number_t>::allocations/1e6 << "MB" << endl;
-    cout << counting_allocator<number_t>::deallocations/1e6 << "MB" << endl;
-
-	return 0;
-}
-```
+[main.cpp](https://github.com/ChrisMisan/tinyML/blob/master/tests/src/main.cpp)
 
 ## Features
 This ANN implementation is meant to be used in edge IoT devices to perform distributed training and/or fine-tuning of predictive models. It utilizes a lightweight binary compression format CBOR to save and read model's weights. 
@@ -55,7 +27,7 @@ Given its minuscule size as well as a standardized weight transfer solution this
 
 CBOR lends itself fantastically as a transport medium for model weights, whilst the C++ implementation of linear algebra tools and the Multi-Layer Perceptron should make this process accessible in even the most constrained edge IoT training environment.
 
-This project demonstrates the desired functionality through reading and writing to File Streams. You can easily repurpose the available `read_network()` and `save_network(mlp_t& network)` to send and receive data over your target transport media. 
+This project demonstrates the desired functionality through reading and writing to File Streams. You can easily repurpose the available `save_to_file(...)` and `load_from_file(...)` to save and load network. 
 
 In order test the Federated Learning approach you need to set up your central unit to receive weights from edge devices, combine those and resend them back to all nodes in your IoT network.
 

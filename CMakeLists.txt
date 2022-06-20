@@ -19,7 +19,7 @@ add_library(tinyML STATIC
 		${tinyML_headers}
 		${tinyML_sources}
 )
-target_link_libraries(tinyML PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(tinyML PUBLIC nlohmann_json::nlohmann_json)
 target_include_directories(tinyML PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(tinyML PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 

@@ -1,6 +1,5 @@
 #include <dataset.hpp>
 #include <mnist/mnist_reader_less.h>
-#include <iostream>
 
 namespace tinyML
 {
@@ -82,8 +81,8 @@ namespace tinyML
             X.push_back(xor_element.first);
             Y.push_back(xor_element.second);
         }
-        dataset.training_images = X;
-        dataset.hot_encoded_training_labels = Y;
+        //dataset.training_images = X;
+        //dataset.hot_encoded_training_labels = Y;
 
         X.clear();
         Y.clear();
@@ -95,8 +94,8 @@ namespace tinyML
             X.push_back(xor_element.first);
             Y.push_back(xor_element.second);
         }
-        dataset.test_images = X;
-        dataset.hot_encoded_test_labels = Y;
+        //dataset.test_images = X;
+        //dataset.hot_encoded_test_labels = Y;
 
         return dataset;
     }

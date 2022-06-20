@@ -250,6 +250,8 @@ namespace tinyML
 
     bool are_equal(const vector_t& a, const vector_t& b)
     {
-        return std::equal(begin(a), end(a), begin(b), end(b));
+        auto va = std::max_element(begin(a), end(a)) - begin(a);
+        auto vb = std::max_element(begin(b), end(b)) - begin(b);
+        return va == vb;
     }
 }

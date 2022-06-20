@@ -151,6 +151,12 @@ coverage*.info
 *.coverage
 *.coveragexml
 
+# CLion
+.idea/*
+
+# build
+build/*
+
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml

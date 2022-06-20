@@ -1,11 +1,9 @@
-#include <common.hpp>
+#include <linalg.hpp>
+
 #include <algorithm>
 #include <numeric>
-#include <iostream>
 
-using namespace std;
-
-namespace mlp
+namespace tinyML
 {
     size_t length(const vector_t& v)
     {
@@ -232,17 +230,6 @@ namespace mlp
         return out;
     }
 
-    void print_vec(const vector_t& vec)
-    {
-        for (auto& el : vec) std::cout << el << " ";
-        std::cout << std::endl;
-    }
-
-    void print_mat(const matrix_t& mat)
-    {
-        for (auto& vec : mat) print_vec(vec);
-    }
-
     void transpose_o(const matrix_t& mat, matrix_t& out)
     {
         for (int i = 0; i < height(mat); i++)
@@ -263,6 +250,8 @@ namespace mlp
 
     bool are_equal(const vector_t& a, const vector_t& b)
     {
-        return std::equal(begin(a), end(a), begin(b), end(b));
+        auto va = std::max_element(begin(a), end(a)) - begin(a);
+        auto vb = std::max_element(begin(b), end(b)) - begin(b);
+        return va == vb;
     }
 }

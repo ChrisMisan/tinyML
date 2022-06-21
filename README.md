@@ -37,7 +37,7 @@ multi_layer_perceptron_t network =
 ```
 The following layer types are available:
 * input layer - `tinyML::input_layer_definition_t(size_t output_size, const tinyML::activation_f_t& activation_f)`, where `output_size` is number of neurons in the layer and `activation_f` is the activation function
-* fully-connected layer - tinyML::dense_layer_definition_t(size_t output_size, const tinyML::activation_f_t& activation_f), where `output_size` is number of neurons in the layer and `activation_f` is the activation function
+* fully-connected layer - `tinyML::dense_layer_definition_t(size_t output_size, const tinyML::activation_f_t& activation_f)`, where `output_size` is number of neurons in the layer and `activation_f` is the activation function
 
 The following activation functions are available:
 * ReLU - `tinyML::relu`
@@ -53,12 +53,12 @@ multi_layer_perceptron_t::train(const matrix_t& X,
         bool reinitialize)
 ```
 where:
-* X - matrix, which each row is a vector describing the observation,
-* Y - matrix, which each row is hot-encoded class label for the corresponding observation,
-* batch_size - size of a batch to be used in each epoch,
-* epochs - number of training epochs to be performed,
-* verbose - true, if the debug output should be printed, false otherwise,
-* reinitialize - true, if the weights and biases in the network should be reinitialized, false otherwise,
+* `X` - matrix, which each row is a vector describing the observation,
+* `Y` - matrix, which each row is hot-encoded class label for the corresponding observation,
+* `batch_size` - size of a batch to be used in each epoch,
+* `epochs` - number of training epochs to be performed,
+* `verbose` - `true`, if the debug output should be printed, `false` otherwise,
+* `reinitialize` - `true`, if the weights and biases in the network should be reinitialized, `false` otherwise,
 
 An example of such a training can be seen here:
 ```Cpp

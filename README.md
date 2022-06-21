@@ -15,6 +15,76 @@ In order to run the library locally you need to build the project:
 As an example we train an MLP network to recognize digits from the MNIST dataset:
 [main.cpp](https://github.com/ChrisMisan/tinyML/blob/master/tests/src/main.cpp)
 
+## API
+In order to create a network, you need to create the `std::array` with desired layer structures, and instantiate the `tinyML::multi_layer_perceptron_t` object. In the code snippet below you can see how it is done:
+```Cpp
+const float LEARNING_CONSTANT = 0.01;
+using namespace tinyML;
+
+const auto input_layer = input_layer_definition_t(784, relu);
+const auto hidden_layer = dense_layer_definition_t(256, relu);
+const auto output_layer = dense_layer_definition_t(10, soft_max);
+
+const array<const base_layer_definition_t*, 3> nn_definition =
+{
+    &input_layer,
+    &hidden_layer,
+    &output_layer
+};
+
+multi_layer_perceptron_t network =
+                multi_layer_perceptron_t(LEARNING_CONSTANT, begin(nn_definition), end(nn_definition));
+```
+The following layer types are available:
+* input layer - `tinyML::input_layer_definition_t(size_t output_size, const tinyML::activation_f_t& activation_f)`, where `output_size` is number of neurons in the layer and `activation_f` is the activation function
+* fully-connected layer - tinyML::dense_layer_definition_t(size_t output_size, const tinyML::activation_f_t& activation_f), where `output_size` is number of neurons in the layer and `activation_f` is the activation function
+
+The following activation functions are available:
+* ReLU - `tinyML::relu`
+* softmax - `tinyML::soft_max`
+
+Once the network is created, you can train it with:
+```Cpp
+multi_layer_perceptron_t::train(const matrix_t& X,
+        const matrix_t& Y,
+        size_t batch_size,
+        size_t epochs,
+        bool verbose,
+        bool reinitialize)
+```
+where:
+* X - matrix, which each row is a vector describing the observation,
+* Y - matrix, which each row is hot-encoded class label for the corresponding observation,
+* batch_size - size of a batch to be used in each epoch,
+* epochs - number of training epochs to be performed,
+* verbose - true, if the debug output should be printed, false otherwise,
+* reinitialize - true, if the weights and biases in the network should be reinitialized, false otherwise,
+
+An example of such a training can be seen here:
+```Cpp
+matrix_t X = ...; // load observations
+matrix_t Y = ...; // load hot-encoded labels
+
+network.train(X, Y, 100, 100, true, true);
+```
+
+The network weights and biases can be saved to the file with `tinyML::save_to_file(std::string file_path, tinyML::multi_layer_perceptron_t network)`, where `path` is the desired path, where the binary file containg the weights should be stored,
+and `network` is the network object:
+```Cpp
+save_to_file("cbor_test.bin", network);
+```
+
+Later on, we can create another network, with weights and biases loaded from the binary file, with the use of `tinyML::load_from_file(std::string path)`, where `path` is the path to the binary file containing weights:
+```Cpp
+ multi_layer_perceptron_t another_network = load_from_file("cbor_test.bin")
+
+ // Now we can use such a network to just classify the desired observations:
+ matrix_t X = ...; // load observations
+ matrix_t output = ...; // prepare matrix where the results will be stored
+ another_network.forward_pass(X, output);
+```
+
+The library is designed in such a way, that when network is used just for the forward passing, it works faster and requires less memory space.
 ## Features
 This ANN implementation is meant to be used in edge IoT devices to perform distributed training and/or fine-tuning of predictive models. It utilizes a lightweight binary compression format CBOR to save and read model's weights. 
 
